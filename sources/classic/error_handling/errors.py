@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, ClassVar
+from typing import List, ClassVar, Optional
 
 from .utils import camel_case_to_dash
 
@@ -67,18 +67,16 @@ class BaseError(Exception):
 class Error(BaseError, metaclass=ErrorMeta):
     namespace: ClassVar[str] = None
     message_template: ClassVar[str] = None
-
+    message: Optional[str] = None
     code_representation: str
-
-    @property
-    def representation(self):
-        """Stub for syntax highlight"""
-        return
+    representation: str
 
     def __init__(self, **kwargs):
         self.context = kwargs
         if self.message_template:
             self.message = self.message_template.format_map(kwargs)
+        elif not self.message:
+            self.message = None
 
     def __str__(self):
         return f'<Error "{self.code_representation}">'
