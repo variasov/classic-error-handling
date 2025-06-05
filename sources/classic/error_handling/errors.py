@@ -79,7 +79,13 @@ class Error(BaseError, metaclass=ErrorMeta):
             self.message = None
 
     def __str__(self):
-        return f'<Error "{self.code_representation}">'
+        if message := self.message:
+            return f'{self.__class__.__name__}("{message}")'
+        elif self.context:
+            attrs = ', '.join(f'{k}={v}' for k, v in self.context.items())
+            return f'{self.__class__.__name__}({attrs})'
+        else:
+            return f'{self.__class__.__name__}()'
 
 
 class ErrorsList(BaseError):

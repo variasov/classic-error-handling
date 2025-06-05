@@ -37,7 +37,7 @@ class TestError:
             'code': 'some_namespace.namespaced',
             'context': {},
         }
-        assert str(error) == '<Error "some_namespace.namespaced">'
+        assert str(error) == 'Namespaced()'
 
     def test_namespaced_inheriting(self):
         error = InheritingNamespace()
@@ -48,7 +48,7 @@ class TestError:
             'code': 'some_namespace.inheriting_namespace',
             'context': {},
         }
-        assert str(error) == '<Error "some_namespace.inheriting_namespace">'
+        assert str(error) == 'InheritingNamespace()'
 
     def test_code(self):
         error = WithCode()
@@ -56,7 +56,7 @@ class TestError:
         assert error.namespace is None
         assert error.code == 'some_error'
         assert error.representation == {'code': 'some_error', 'context': {}}
-        assert str(error) == '<Error "some_error">'
+        assert str(error) == 'WithCode()'
 
     def test_literal_message(self):
         error = WithLiteralMessage()
@@ -68,7 +68,7 @@ class TestError:
             'message': 'some_message',
             'context': {},
         }
-        assert str(error) == '<Error "with_literal_message">'
+        assert str(error) == 'WithLiteralMessage("some_message")'
 
     def test_message_template(self):
         error = WithMessageTemplate(arg=1)
@@ -82,7 +82,20 @@ class TestError:
                 'arg': 1
             },
         }
-        assert str(error) == '<Error "with_message_template">'
+        assert str(error) == 'WithMessageTemplate("some_template: 1")'
+
+    def test_context(self):
+        error = WithCode(arg=1)
+
+        assert error.namespace is None
+        assert error.code == 'some_error'
+        assert error.representation == {
+            'code': 'some_error',
+            'context': {
+                'arg': 1
+            },
+        }
+        assert str(error) == "WithCode(arg=1)"
 
 
 class TestErrorsList:

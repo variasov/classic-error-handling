@@ -1,105 +1,114 @@
-# Classic App Layer
+# Classic Error Handling
 
-This package provides primitives for application layer.
-Part of project "Classic".
+Этот пакет предоставляет примитивы для обработки ошибок на уровне приложения.
+Часть проекта "Classic".
 
-Usage for validation:
+## Установка
 
-```python
-from dataclasses import dataclass
-
-from classic.app import DTO, validate_with_dto
-from pydantic import validate_arguments
-
-
-class SomeDTO(DTO):
-    """Based on pydantic.BaseModel. Used for validating input"""
-    
-    some_field: int
-    another_field: str
-
-
-@dataclass
-class SomeAppCls:
-    """Some class with app logic. May be mapped on DB."""
-    some_field: int
-    another_field: str
-
-
-class SomeService:
-    
-    @validate_arguments
-    def some_method(self, arg: int):
-        assert isinstance(arg, int)
-    
-    @validate_with_dto
-    def another_method(self, params: SomeDTO):
-        instance = params.create_obj(SomeAppCls)
-        print(instance)
-
+```bash
+pip install classic-error-handling
 ```
 
-Usage for errors:
+## Использование
+
+Примеры оформления ошибок:
+
 ```python
-from classic.app import AppError, ErrorsList
+from classic.error_handling import Error, ErrorsList
 
 
-# Describe errors, possible in application
-class IncorrectState(AppError):
-    msg_template = 'Incorrect app state - "{text}"'
-    code = 'app.incorrect_state'
+# Ошибка с пространством имен
+class Namespaced(Error):
+    namespace = 'some_namespace'
 
 
-class ServiceNotReady(AppError):
-    msg_template = 'Service not ready yet'
-    code = 'app.service_not_ready'
+# Наследование пространства имен
+class InheritingNamespace(Namespaced):
+    pass
 
 
-# In another file with services:
+# Ошибка с пространством имен и явным кодом
+class NamespacedWithCode(Error):
+    namespace = 'some_namespace'
+    code = 'some_error'
+
+
+# Ошибка с явным кодом без пространства имен
+class WithCode(Error):
+    code = 'some_error'
+
+
+# Ошибка с литеральным сообщением
+class WithLiteralMessage(Error):
+    message_template = 'some_message'
+
+
+# Ошибка с шаблоном сообщения
+class WithMessageTemplate(Error):
+    message_template = 'some_template: {arg}'
+```
+
+Пример использования:
+
+```python
+from classic.error_handling import Error, ErrorsList
+
+
+# Определяем ошибки приложения
+class IncorrectState(Error):
+    namespace = 'app'
+    message_template = 'Некорректное состояние приложения - "{text}"'
+
+
+class ServiceNotReady(Error):
+    namespace = 'app'
+    message_template = 'Сервис еще не готов'
+
+
+# В сервисах:
 class SomeService:
     
     def __init__(self):
         self.ready_to_serve = False
 
     def is_ready(self):
-        """Demonstrates simple usage"""
+        """Демонстрирует простое использование"""
         if not self.ready_to_serve:
             raise ServiceNotReady()
 
     def mark_as_ready(self):
-        """Demonstrates usage of error message templates"""
+        """Демонстрирует использование шаблонов сообщений"""
         if self.ready_to_serve:
-            raise IncorrectState(text='Service are ready')
+            raise IncorrectState(text='Сервис уже готов')
         self.ready_to_serve = True
 
     def just_give_errors(self):
-        """Demonstrates method, what may have more than 1 error"""
-        errors = [IncorrectState(text='error 1'), 
-                  IncorrectState(text='error 2')]
-        raise ErrorsList(errors)
+        """Демонстрирует метод, который может вернуть несколько ошибок"""
+        errors = [IncorrectState(text='ошибка 1'), 
+                  IncorrectState(text='ошибка 2')]
+        raise ErrorsList(*errors)
 
 
-# Somewhere in adapters:
+# Где-то в адаптерах:
 
 service = SomeService()
 
 try:
     service.is_ready()
-except AppError as error:
-    print(f'Application responses with error code "{error.code}", '
-          f'message is "{error.message}"')
+except Error as error:
+    print(f'Приложение ответило с кодом ошибки "{error.code_representation}", '
+          f'сообщение: "{error.message}"')
 
 try:
     service.mark_as_ready()
     service.mark_as_ready()
-except AppError as error:
-    print(f'Application responses with error code "{error.code}", '
-          f'message is "{error.message}"')
+except Error as error:
+    print(f'Приложение ответило с кодом ошибки "{error.code_representation}", '
+          f'сообщение: "{error.message}"')
     
 try:
     service.just_give_errors()
 except ErrorsList as errors_list:
     for error in errors_list.errors:
-        print(f'Application responses with error code "{error.code}", '
-              f'message is "{error.message}"')
-```
+        print(f'Приложение ответило с кодом ошибки "{error.code_representation}", '
+              f'сообщение: "{error.message}"')
