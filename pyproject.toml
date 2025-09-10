@@ -4,3 +4,29 @@ requires = [
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "classic-error-handling"
+version = "0.2.2"
+authors = [
+    {name = "Sergey Variasov", email = "variasov@gmail.com"},
+]
+description = "Provides primitives for application errors"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/variasov/classic-error-handling"
+
+[project.optional-dependencies]
+dev = [
+    "build~=1.2.2.post1",
+    "pytest==8.3.4",
+    "pytest-cov==6.0.0",
+    "twine~=4.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["sources"]
+namespaces = true
